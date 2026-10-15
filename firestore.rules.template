@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // IMPORTANT: replace REPLACE_WITH_OWNER_AUTH_UID with your own Firebase Authentication UID.
+    // Find it in Firebase Console > Authentication > Users. Do not use the literal word "admin".
+    function isOwner() {
+      return request.auth != null && request.auth.uid == 'REPLACE_WITH_OWNER_AUTH_UID';
+    }
+
+    match /app_users/{userId} {
+      // Only the owner can read or change subscription/control records.
+      allow read, create, update, delete: if isOwner();
+    }
+
+    // Keep any other collections closed until you deliberately define access rules.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
