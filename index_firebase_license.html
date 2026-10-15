@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title id="pageTitle">Smart City Car Wash</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}
+header{background:#111827;color:#fff;padding:18px 16px}header b{font-size:21px}
+main{max-width:720px;margin:auto;padding:12px 12px 85px}.screen{display:none}.screen.active{display:block}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:#fff;border-radius:15px;padding:15px;margin:9px 0;box-shadow:0 2px 8px #0001}
+.num{font-size:24px;font-weight:700}.muted{color:#6b7280;font-size:13px}
+input,select{width:100%;padding:12px;margin:5px 0 10px;border:1px solid #d1d5db;border-radius:9px;font-size:15px}
+button{border:0;border-radius:9px;padding:10px 12px}.primary{background:#111827;color:#fff}.danger{background:#fee2e2;color:#991b1b}.waBtn{background:#d1fae5;color:#065f46}.paymentWaBtn{background:#dbeafe;color:#1e40af}.reminderWaBtn{background:#fef3c7;color:#92400e}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;justify-content:space-around;padding:7px;z-index:5}
+nav button{background:#fff;font-size:12px}nav button.active{background:#111827;color:#fff}
+.customer{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:9px 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.washes{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0}.wash{background:#e5e7eb}.wash.done{background:#bbf7d0}
+.pill{padding:5px 8px;border-radius:15px;background:#e5e7eb;font-size:12px}.paid{background:#bbf7d0}.pending{background:#fecaca}.partial{background:#fed7aa}
+.paymentTypeInfo{font-size:13px;margin:6px 0;color:#475569}.paymentTypeInfo b{color:#0f172a}
+.aiQuick{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 12px}
+.aiQ{background:#eef2ff;color:#3730a3}
+#aiInput,#aiInstructions{width:100%;min-height:90px;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;resize:vertical}.scheduleCard{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:9px 0}.dayBox{display:flex;flex-wrap:wrap;gap:6px}.dayBox label{background:#f1f5f9;padding:6px 8px;border-radius:8px;font-size:13px}.dayBox input{width:auto;margin:0}
+.aiAnswer{white-space:pre-wrap;line-height:1.55;background:#f8fafc;border-radius:10px;padding:12px;margin-top:8px;min-height:70px}
+.dashboardPositive{color:#047857}.dashboardNegative{color:#b91c1c}.expenseItem{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-top:1px solid #eef2f7;font-size:13px}
+</style>
+</head>
+<body>
+<div id="licenseGate" style="position:fixed;inset:0;z-index:1000;background:#f3f4f6;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto">
+ <div style="width:min(420px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 8px 30px #0002">
+  <h2 style="margin-top:0">🚗 Smart City Car Wash</h2>
+  <p class="muted">Sign in with your Business ID and password.</p>
+  <label for="licenseBusinessId">Business ID</label><input id="licenseBusinessId" autocomplete="username" placeholder="Example: SCW001">
+  <label for="licensePassword">Password</label><input id="licensePassword" type="password" autocomplete="current-password" placeholder="Password">
+  <button id="licenseLoginBtn" class="primary" style="width:100%">Login</button>
+  <p id="licenseMessage" class="muted" role="status" style="line-height:1.5"></p>
+ </div>
+</div>
+<header><b>🚗 <span id="brandHeader">Smart City Car Wash</span></b><br><small>Customer • Wash • Schedule • Payment • Backup • AI</small><button id="licenseLogoutBtn" style="float:right;margin-top:-24px">Logout</button><div style="clear:both"></div></header>
+<main>
+<section id="home" class="screen active">
+<h2>📊 Dashboard</h2>
+<div class="card"><div class="row"><div><b>Current Month</b><div class="muted" id="monthLabel"></div></div><button class="primary" id="newMonthBtn">+ New Month</button></div><select id="monthSelect"></select></div>
+<div class="cards">
+<div class="card">👥 Customers<div class="num" id="customersCount">0</div></div>
+<div class="card">🚿 Total Wash<div class="num" id="washCount">0</div></div>
+<div class="card">💰 Month Collection<div class="num" id="paidTotal">₹0</div></div>
+<div class="card">🔔 Pending<div class="num" id="pendingTotal">₹0</div></div>
+<div class="card">🚿 Today's Wash<div class="num" id="todayWashCount">0</div></div>
+<div class="card">💵 Today's Collection<div class="num" id="todayCollection">₹0</div></div>
+<div class="card">📈 Business Profit<div class="num" id="businessProfit">₹0</div></div>
+<div class="card">💸 Money Left<div class="num" id="moneyLeft">₹0</div></div>
+<div class="card">🧾 Business Expense<div class="num" id="businessExpenseTotal">₹0</div></div>
+<div class="card">👤 Personal Expense<div class="num" id="personalExpenseTotal">₹0</div></div>
+<div class="card">📦 Completed Packages<div class="num" id="completedPackages">0</div></div>
+<div class="card">📅 Today's Schedule<div class="num" id="todayScheduleCount">0</div></div>
+</div>
+<div class="card"><b>💡 Quick Business Summary</b><div id="dashboardSummary" class="muted" style="line-height:1.7;margin-top:7px"></div></div>
+<div class="card"><b>🧾 Add Expense</b><p class="muted">Business and personal expenses are kept separate.</p><select id="expenseType"><option value="business">Business Expense</option><option value="personal">Personal Expense</option></select><input id="expenseAmount" type="number" min="0" step="0.01" placeholder="Amount ₹"><input id="expenseNote" placeholder="Expense note (optional)"><input id="expenseDate" type="date"><button class="primary" id="addExpenseBtn">Add Expense</button> <span id="expenseSaved" class="muted"></span><div id="recentExpenses" style="margin-top:10px"></div></div>
+<div class="card"><b>🚗 Quick Car Search</b><input id="quickSearch" placeholder="Car number"><div id="quickResult" class="muted"></div></div>
+<div class="card"><b>💾 Backup</b><p class="muted">Export your customer, wash, payment and expense data to a file and import it later.</p>
+<button class="primary" id="backupBtn">Export Backup</button>
+<button id="importBtn">Import Backup</button>
+<input id="importFile" type="file" accept=".json" style="display:none">
+</div>
+<div class="card"><b>⚙️ Business Settings</b><p class="muted">Change the business name shown in the app and WhatsApp messages.</p><label>Company / Business name</label><input id="companyNameInput" placeholder="Company name"><label>UPI ID</label><input id="upiIdInput" placeholder="example@upi"><button class="primary" id="saveBusinessSettings">Save Settings</button> <span id="businessSaved" class="muted"></span></div>
+</section>
+
+<section id="customers" class="screen">
+<h2>Customers</h2>
+<div class="card"><div class="row"><b id="customerMonthTitle">Current Month</b><span class="pill" id="archiveStatus">Current</span></div></div><input id="filter" placeholder="Search name / car / apartment"><div id="list"></div>
+</section>
+
+<section id="add" class="screen">
+<h2>Add Customer</h2>
+<div class="card">
+<input id="customerName" placeholder="Customer name">
+<input id="phone" placeholder="Mobile number">
+<input id="car" placeholder="Car number">
+<input id="apt" placeholder="Apartment name">
+<select id="carType"><option>Hatchback</option><option>Sedan</option><option>SUV</option><option>Big Car</option></select>
+<input id="pkg" type="number" min="1" max="50" value="8" placeholder="Number of washes">
+<input id="price" type="number" placeholder="Package price"><label>Wash schedule days</label><div class="dayBox" id="addDays"><label><input type="checkbox" value="Monday"> Mon</label><label><input type="checkbox" value="Tuesday"> Tue</label><label><input type="checkbox" value="Wednesday"> Wed</label><label><input type="checkbox" value="Thursday"> Thu</label><label><input type="checkbox" value="Friday"> Fri</label><label><input type="checkbox" value="Saturday"> Sat</label><label><input type="checkbox" value="Sunday"> Sun</label></div><label>Preferred time</label><input id="scheduleTime" type="time">
+<button class="primary" id="saveCustomer">Save Customer</button>
+</div>
+</section>
+
+<section id="search" class="screen">
+<h2>Search History</h2>
+<div class="card">
+  <div class="row" style="justify-content:flex-start;gap:8px;margin-bottom:8px">
+    <button id="carSearchTab" class="primary" type="button">🚗 Car Number</button>
+    <button id="aptSearchTab" type="button">🏢 Apartment</button>
+  </div>
+  <div id="carSearchBox">
+    <input id="find" placeholder="Enter car number">
+    <div id="result"></div>
+  </div>
+  <div id="aptSearchBox" style="display:none">
+    <input id="aptFind" list="apartmentOptions" placeholder="Enter apartment name">
+    <datalist id="apartmentOptions"></datalist>
+    <div id="aptSummary" class="muted" style="margin:4px 0 10px"></div>
+    <div id="aptResult"></div>
+  </div>
+</div>
+</section>
+
+<section id="schedule" class="screen"><h2>📅 Wash Schedule</h2>
+<div class="card"><b>🚿 Today & Tomorrow</b><p class="muted">এই তালিকা schedule days অনুযায়ী automatic তৈরি হবে। আজ ও আগামীকালের wash আলাদা করে দেখাবে।</p><div id="upcomingWashList"></div></div>
+<div class="card"><p class="muted">Set fixed wash days and preferred time. Generate exactly the number of dates included in the package (4, 8, 12, etc.) and send them to the customer on WhatsApp whenever you want.</p><input id="scheduleSearch" placeholder="Search customer / car"><div id="scheduleList"></div></div></section><section id="ai" class="screen">
+<h2>🤖 AI Assistant</h2>
+<div class="card">
+<b><span id="aiBrand">Smart City Car Wash</span> AI</b>
+<p class="muted">Ask about customers, washes and payments. This assistant uses the data stored in this app.</p>
+<div class="aiQuick">
+<button class="aiQ" data-q="How many washes were completed this month?">🚿 Total washes</button>
+<button class="aiQ" data-q="Who has pending payment?">🔔 Pending payments</button>
+<button class="aiQ" data-q="How much money did I receive this month?">💰 Total received</button>
+<button class="aiQ" data-q="Which customers completed their package?">✅ Completed packages</button>
+</div>
+<textarea id="aiInput" placeholder="Example: KL07CT2808 er koto wash baki?"></textarea>
+<button class="primary" id="aiAsk">Ask AI</button>
+</div>
+<div class="card"><b>⚙️ AI Instructions</b><p class="muted">Write rules for the local AI assistant. Apartment filtering is built into the assistant.</p><textarea id="aiInstructions" placeholder="Example: Always answer in English. Keep answers short."></textarea><button class="primary" id="saveAIInstructions">Save Instructions</button> <span id="aiInstructionSaved" class="muted"></span></div><div class="card"><b>AI Answer</b><div id="aiAnswer" class="aiAnswer">এখানে আপনার প্রশ্নের উত্তর দেখাবে।</div></div>
+</section>
+</main>
+
+<div id="editModal" style="display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:16px"><div class="card" style="width:min(560px,100%);max-height:90vh;overflow:auto"><div class="row"><h2>Edit Customer</h2><button id="cancelEdit">✕</button></div><input type="hidden" id="editId"><label>Customer name</label><input id="editName"><label>Mobile number</label><input id="editPhone" inputmode="numeric"><label>Car number</label><input id="editCar"><label>Apartment name</label><input id="editApt"><label>Car type</label><select id="editType"><option>Hatchback</option><option>Sedan</option><option>SUV</option><option>Big Car</option></select><label>Number of washes</label><input id="editPkg" type="number" min="1" max="50"><label>Package price</label><input id="editPrice" type="number" min="0"><label>Wash schedule days</label><div class="dayBox" id="editDays"><label><input type="checkbox" value="Monday"> Mon</label><label><input type="checkbox" value="Tuesday"> Tue</label><label><input type="checkbox" value="Wednesday"> Wed</label><label><input type="checkbox" value="Thursday"> Thu</label><label><input type="checkbox" value="Friday"> Fri</label><label><input type="checkbox" value="Saturday"> Sat</label><label><input type="checkbox" value="Sunday"> Sun</label></div><label>Preferred time</label><input id="editScheduleTime" type="time"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="cancelEdit2">Cancel</button><button class="primary" id="saveEdit">Save Changes</button></div></div></div>
+
+<nav>
+<button class="active" data-screen="home">🏠<br>Home</button>
+<button data-screen="customers">👥<br>Customers</button>
+<button data-screen="add">➕<br>Add</button>
+<button data-screen="search">🔎<br>Search</button><button data-screen="schedule">📅<br>Schedule</button><button data-screen="ai">🤖<br>AI</button>
+</nav>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCtPymcfyDc5hFG_x0yizl3NTUDn_E-Jis",
+  authDomain: "smartcitycarwash-8fe2b.firebaseapp.com",
+  projectId: "smartcitycarwash-8fe2b",
+  storageBucket: "smartcitycarwash-8fe2b.firebasestorage.app",
+  messagingSenderId: "414891237098",
+  appId: "1:414891237098:web:de8c740c2ea6cbb2288193",
+  measurementId: "G-9TZ0G926YT"
+};
+const gate = document.getElementById('licenseGate');
+const message = document.getElementById('licenseMessage');
+const loginBtn = document.getElementById('licenseLoginBtn');
+const businessInput = document.getElementById('licenseBusinessId');
+const passwordInput = document.getElementById('licensePassword');
+let auth, db, appReady = false;
+function say(text){ message.textContent = text; }
+function businessAuthEmail(id){
+  const clean = String(id || '').trim().toLowerCase();
+  return clean ? clean.replace(/[^a-z0-9._-]/g, '') + '@smartcitycarwash.app' : '';
+}
+async function checkLicense(user){
+  if (!user) { gate.style.display='flex'; say('Enter your Business ID and password to continue.'); return false; }
+  try {
+    const snap = await getDoc(doc(db, 'app_users', user.uid));
+    if (!snap.exists()) { await signOut(auth); gate.style.display='flex'; say('License record not found. Please contact the app owner.'); return false; }
+    const data = snap.data();
+    const status = String(data.subscriptionStatus || 'Pending').toLowerCase();
+    const enabled = data.appEnabled !== false;
+    const active = status === 'active';
+    const expiry = String(data.expiryDate || '').trim();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const expired = !!expiry && !Number.isNaN(new Date(expiry + 'T00:00:00').getTime()) && new Date(expiry + 'T00:00:00') < today;
+    if (!enabled || !active || expired) {
+      await signOut(auth);
+      gate.style.display='flex';
+      say(!enabled || status === 'suspended' ? 'This app license is blocked. Please contact the app owner.' : expired ? 'Your app license has expired. Please contact the app owner.' : 'Your license is not active yet. Please contact the app owner.');
+      return false;
+    }
+    gate.style.display='none';
+    appReady = true;
+    return true;
+  } catch (e) {
+    gate.style.display='flex';
+    say('Could not verify the license (' + (e?.code || 'error') + '). Check internet connection and Firebase Firestore Rules.');
+    return false;
+  }
+}
+try {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  onAuthStateChanged(auth, user => { checkLicense(user); });
+} catch (e) {
+  gate.style.display='flex';
+  say('Firebase setup error: ' + (e?.message || e));
+}
+loginBtn.addEventListener('click', async () => {
+  const id = businessInput.value.trim();
+  const password = passwordInput.value;
+  if (!id || !password) { say('Enter both Business ID and password.'); return; }
+  if (!auth) { say('Firebase is not connected.'); return; }
+  loginBtn.disabled = true; say('Signing in and checking license…');
+  try {
+    const credential = await signInWithEmailAndPassword(auth, businessAuthEmail(id), password);
+    const ok = await checkLicense(credential.user);
+    if (ok) say('Login successful.');
+  } catch (e) {
+    say('Login failed (' + (e?.code || 'error') + '). Check your Business ID and password.');
+  } finally { loginBtn.disabled = false; }
+});
+passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+businessInput.addEventListener('keydown', e => { if (e.key === 'Enter') passwordInput.focus(); });
+document.getElementById('licenseLogoutBtn').addEventListener('click', async () => {
+  if (!auth) return;
+  try { await signOut(auth); } catch (e) { alert('Logout failed: ' + (e?.message || e)); }
+});
+</script>
+<script>
+(function(){
+const KEY='SCW_V5';
+const $=id=>document.getElementById(id);
+function companyName(){return (store.companyName||'Smart City Car Wash').trim()||'Smart City Car Wash';}
+function upiId(){return (store.upiId||'').trim()||'YOUR_UPI_ID';}
+function applyBrand(){const n=companyName();$('brandHeader').textContent=n;document.title=n;$('companyNameInput').value=n;$('upiIdInput').value=store.upiId||'';if($('aiBrand'))$('aiBrand').textContent=n;}
+function monthKey(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function monthName(k){const [y,m]=k.split('-');return new Date(Number(y),Number(m)-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});}
+let activeMonth=monthKey();
+let store={customers:[],months:{},expenses:[],paymentHistory:[]};
+try{store=JSON.parse(localStorage.getItem(KEY)||'null')||{customers:[],months:{}}}catch(e){}
+if(!store.customers.length){try{const legacy=JSON.parse(localStorage.getItem('SCW_V4')||'[]');if(Array.isArray(legacy)&&legacy.length){store.customers=legacy.map(c=>({id:c.id,name:c.name||'',phone:c.phone||'',car:c.car||'',apt:c.apt||'',type:c.type||'Hatchback'}));store.months[activeMonth]={};legacy.forEach(c=>store.months[activeMonth][c.id]={pkg:Number(c.pkg)||8,price:Number(c.price)||0,paid:Number(c.paid)||0,washes:Array.isArray(c.washes)?c.washes:[],scheduleDays:Array.isArray(c.scheduleDays)?c.scheduleDays:[],scheduleTime:c.scheduleTime||'',paymentType:c.paymentType||'After wash payment'});}}catch(e){}}
+// Migrate data created by earlier V4/V5 build into the current month.
+if(!Array.isArray(store.customers)) store.customers=[];
+if(!Array.isArray(store.expenses)) store.expenses=[];
+if(!Array.isArray(store.paymentHistory)) store.paymentHistory=[];
+if(!store.months||typeof store.months!=='object') store.months={};
+Object.keys(store.months).forEach(k=>Object.keys(store.months[k]||{}).forEach(id=>{const r=store.months[k][id];if(r&&!Array.isArray(r.scheduleDays))r.scheduleDays=[];if(r&&r.scheduleTime===undefined)r.scheduleTime='';}));if(!store.aiInstructions)store.aiInstructions='';
+if(!store.companyName)store.companyName='Smart City Car Wash';
+if(store.upiId===undefined)store.upiId='';
+if(!store.months[activeMonth]){
+ let old=[];try{old=JSON.parse(localStorage.getItem('SCW_V4')||'[]')}catch(e){}
+ if(Array.isArray(old)&&old.length){
+  store.customers=old.map(c=>({id:c.id,name:c.name||'',phone:c.phone||'',car:c.car||'',apt:c.apt||'',type:c.type||'Hatchback'}));
+  store.months[activeMonth]={}; old.forEach(c=>store.months[activeMonth][c.id]={pkg:Number(c.pkg)||8,price:Number(c.price)||0,paid:Number(c.paid)||0,washes:Array.isArray(c.washes)?c.washes:[],scheduleDays:Array.isArray(c.scheduleDays)?c.scheduleDays:[],scheduleTime:c.scheduleTime||'',paymentType:c.paymentType||'After wash payment'});
+ }
+}
+function ensureMonth(k){if(!store.months[k])store.months[k]={};store.customers.forEach(c=>{if(!store.months[k][c.id])store.months[k][c.id]={pkg:8,price:0,paid:0,paymentType:'After wash payment',washes:Array(8).fill(null),scheduleDays:[],scheduleTime:''};const r=store.months[k][c.id];if(!Array.isArray(r.scheduleDays))r.scheduleDays=[];if(r.scheduleTime===undefined)r.scheduleTime='';if(!r.paymentType)r.paymentType='After wash payment';});}
+ensureMonth(activeMonth);
+function save(){localStorage.setItem(KEY,JSON.stringify(store));stats();}
+function rec(c){ensureMonth(activeMonth);return store.months[activeMonth][c.id]||{pkg:8,price:0,paid:0,washes:[]};}
+function allMonths(){return Object.keys(store.months).sort().reverse();}
+function go(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));if(id==='customers')render();if(id==='schedule')renderSchedule();stats();}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.screen)));
+function stats(){
+ $('customersCount').textContent=store.customers.length;
+ const rs=store.customers.map(rec);
+ const totalWash=rs.reduce((s,r)=>s+(r.washes||[]).filter(Boolean).length,0);
+ const monthPaid=rs.reduce((s,r)=>s+(Number(r.paid)||0),0);
+ const pending=rs.reduce((s,r)=>s+Math.max(0,(Number(r.price)||0)-(Number(r.paid)||0)),0);
+ $('washCount').textContent=totalWash;
+ $('paidTotal').textContent='₹'+monthPaid;
+ $('pendingTotal').textContent='₹'+pending;
+ $('monthLabel').textContent=monthName(activeMonth);$('customerMonthTitle').textContent=monthName(activeMonth);
+ $('archiveStatus').textContent=activeMonth===monthKey()?'Current':'Archived';
+ renderMonths();
+ renderDashboard();
+}
+function expenseMonthTotal(type, month){
+ return store.expenses.filter(e=>e.type===type && String(e.date||'').slice(0,7)===month).reduce((s,e)=>s+(Number(e.amount)||0),0);
+}
+function expenseDateTotal(type, date){
+ return store.expenses.filter(e=>e.type===type && e.date===date).reduce((s,e)=>s+(Number(e.amount)||0),0);
+}
+function paymentMonthTotal(month){
+ return store.customers.reduce((s,c)=>s+(Number((store.months[month]||{})[c.id]?.paid)||0),0);
+}
+function paymentDateTotal(date){
+ return store.paymentHistory.filter(x=>x.date===date).reduce((s,x)=>s+(Number(x.amount)||0),0);
+}
+function scheduledCountForDate(dateObj){
+ const map={Sunday:0,Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6};
+ const day=dateObj.getDay();
+ return store.customers.filter(c=>{const r=rec(c);return (r.scheduleDays||[]).some(d=>map[d]===day);}).length;
+}
+function renderDashboard(){
+ const today=dateKeyLocal(new Date());
+ const todayWash=store.customers.reduce((s,c)=>s+((rec(c).washes||[]).filter(d=>d===new Date().toLocaleDateString('en-IN')).length),0);
+ const monthCollection=paymentMonthTotal(activeMonth);
+ const todayCollection=paymentDateTotal(today);
+ const bizExp=expenseMonthTotal('business',activeMonth);
+ const personalExp=expenseMonthTotal('personal',activeMonth);
+ const todayBizExp=expenseDateTotal('business',today);
+ const profit=monthCollection-bizExp;
+ const left=monthCollection-bizExp-personalExp;
+ const completed=store.customers.filter(c=>{const r=rec(c);return (r.washes||[]).filter(Boolean).length>=Number(r.pkg||0);}).length;
+ const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+ const todayScheduled=scheduledCountForDate(new Date());
+ const tomorrowScheduled=scheduledCountForDate(tomorrow);
+ const aptCount=new Set(store.customers.map(c=>String(c.apt||'').trim()).filter(Boolean).map(x=>x.toLowerCase())).size;
+ $('todayWashCount').textContent=todayWash;
+ $('todayCollection').textContent='₹'+todayCollection;
+ $('businessProfit').textContent='₹'+profit;
+ $('moneyLeft').textContent='₹'+left;
+ $('businessExpenseTotal').textContent='₹'+bizExp;
+ $('personalExpenseTotal').textContent='₹'+personalExp;
+ $('completedPackages').textContent=completed;
+ $('todayScheduleCount').textContent=todayScheduled;
+ const bp=$('businessProfit');bp.className='num '+(profit>=0?'dashboardPositive':'dashboardNegative');
+ const ml=$('moneyLeft');ml.className='num '+(left>=0?'dashboardPositive':'dashboardNegative');
+ $('dashboardSummary').innerHTML='📅 Today: <b>'+todayWash+'</b> washes completed • <b>₹'+todayCollection+'</b> collection • <b>₹'+todayBizExp+'</b> business expense • <b>₹'+(todayCollection-todayBizExp)+'</b> today\'s business profit<br>📆 Tomorrow: <b>'+tomorrowScheduled+'</b> scheduled washes • 🏢 Apartments: <b>'+aptCount+'</b> • 📦 Completed packages: <b>'+completed+'</b>';
+ renderRecentExpenses();
+}
+function renderRecentExpenses(){
+ const el=$('recentExpenses');if(!el)return;
+ const rows=store.expenses.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);
+ el.innerHTML=rows.length?rows.map((e,i)=>'<div class="expenseItem"><span>'+esc(e.type==='business'?'🧾 Business':'👤 Personal')+' • '+esc(e.note||'Expense')+'<br><span class="muted">'+esc(e.date)+'</span></span><b>₹'+(Number(e.amount)||0)+'</b></div>').join(''):'<div class="muted">No expenses added yet.</div>';
+}
+function renderMonths(){const sel=$('monthSelect');if(!sel)return;sel.innerHTML=allMonths().map(k=>'<option value="'+k+'" '+(k===activeMonth?'selected':'')+'>'+monthName(k)+'</option>').join('');}
+function getCheckedDays(id){return Array.from(document.querySelectorAll('#'+id+' input[type=checkbox]:checked')).map(x=>x.value);}
+function setCheckedDays(id,days){document.querySelectorAll('#'+id+' input[type=checkbox]').forEach(x=>x.checked=(days||[]).includes(x.value));}
+function addCustomer(){const n=Math.max(1,Math.min(50,Number($('pkg').value)||0));const c={id:Date.now(),name:$('customerName').value.trim(),phone:$('phone').value.trim(),car:$('car').value.trim().toUpperCase(),apt:$('apt').value.trim(),type:$('carType').value};if(!c.name||!c.car){alert('Customer name and car number are required');return;}store.customers.push(c);ensureMonth(activeMonth);store.months[activeMonth][c.id]={pkg:n,price:Number($('price').value)||0,paid:0,paymentType:'After wash payment',washes:Array(n).fill(null),scheduleDays:getCheckedDays('addDays'),scheduleTime:$('scheduleTime').value||''};save();['customerName','phone','car','apt','price','scheduleTime'].forEach(id=>$(id).value='');$('pkg').value='8';setCheckedDays('addDays',[]);alert('Customer saved successfully');go('customers');}
+function customerCard(c){const r=rec(c);const ws=(r.washes||[]).map((d,i)=>'<button class="wash '+(d?'done':'')+'" data-id="'+c.id+'" data-i="'+i+'">W'+(i+1)+(d?'<br><small>'+d+'</small>':'')+'</button>').join('');const total=Number(r.price)||0,paid=Number(r.paid)||0;const st=(total>0&&paid>=total)?'Paid':(paid>0&&paid<total?'Partial Paid':'Pending');const cls=st==='Paid'?'paid':(st==='Partial Paid'?'partial':'pending');const ptype=r.paymentType||'After wash payment';return '<div class="customer"><div class="row"><b>'+esc(c.name)+'</b><span>'+esc(c.car)+'</span></div><div class="muted">'+esc(c.type)+' • '+esc(c.apt||'No apartment')+' • '+(r.washes||[]).filter(Boolean).length+'/'+r.pkg+' washes</div><div class="washes">'+ws+'</div><div class="row"><span>₹'+paid+' paid / ₹'+total+'</span><span class="pill '+cls+'">'+st+'</span></div><div class="paymentTypeInfo">Payment type: <b>'+esc(ptype)+'</b></div><div class="paymentTypeInfo">📅 Schedule: <b>'+esc((r.scheduleDays||[]).join(', ')||'Not set')+(r.scheduleTime?' • '+r.scheduleTime:'')+'</b></div><br><button class="paymentBtn" data-id="'+c.id+'">Payment</button> <button class="editBtn" data-id="'+c.id+'">Edit</button> <button class="waBtn" data-id="'+c.id+'">💬 Wash</button> <button class="reminderWaBtn" data-id="'+c.id+'">🔔 Reminder</button> <button class="paymentWaBtn" data-id="'+c.id+'">💰 Payment</button> <button class="scheduleWaBtn" data-id="'+c.id+'">📅 Schedule</button> <button class="danger deleteBtn" data-id="'+c.id+'">Delete</button></div>';}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function editCustomer(id){const c=store.customers.find(x=>x.id===Number(id));if(!c)return;const r=rec(c);$('editId').value=c.id;$('editName').value=c.name;$('editPhone').value=c.phone||'';$('editCar').value=c.car;$('editApt').value=c.apt||'';$('editType').value=c.type||'Hatchback';$('editPkg').value=r.pkg;$('editPrice').value=r.price||0;$('editScheduleTime').value=r.scheduleTime||'';setCheckedDays('editDays',r.scheduleDays||[]);$('editModal').style.display='flex';}
+function closeEdit(){$('editModal').style.display='none';}
+$('cancelEdit').addEventListener('click',closeEdit);$('cancelEdit2').addEventListener('click',closeEdit);
+$('saveEdit').addEventListener('click',function(){const id=Number($('editId').value),c=store.customers.find(x=>x.id===id);if(!c)return;const r=rec(c);const n=Math.max(1,Math.min(50,Number($('editPkg').value)||1));const name=$('editName').value.trim(),car=$('editCar').value.trim().toUpperCase();if(!name||!car){alert('Customer name and car number are required');return;}c.name=name;c.phone=$('editPhone').value.trim();c.car=car;c.apt=$('editApt').value.trim();c.type=$('editType').value;r.pkg=n;r.price=Number($('editPrice').value)||0;r.scheduleDays=getCheckedDays('editDays');r.scheduleTime=$('editScheduleTime').value||'';const old=r.washes||[];r.washes=Array.from({length:n},(_,i)=>old[i]||null);save();closeEdit();render();renderSchedule();renderUpcomingWashList();alert('Customer details updated successfully');});
+function render(){const q=$('filter').value.toLowerCase();$('list').innerHTML=store.customers.filter(c=>(c.name+c.car+c.apt).toLowerCase().includes(q)).map(customerCard).join('')||'<div class="card muted">No customers found.</div>';renderApartmentOptions();if($('aptSearchBox').style.display!=='none')renderApartmentSearch();}
+$('saveBusinessSettings').addEventListener('click',function(){const n=$('companyNameInput').value.trim();if(!n){alert('Company name is required');return;}store.companyName=n;store.upiId=$('upiIdInput').value.trim();save();applyBrand();$('businessSaved').textContent='Saved ✓';setTimeout(()=>$('businessSaved').textContent='',1800);});
+$('saveCustomer').addEventListener('click',addCustomer);$('filter').addEventListener('input',render);$('monthSelect').addEventListener('change',function(){activeMonth=this.value;ensureMonth(activeMonth);save();render();});
+$('newMonthBtn').addEventListener('click',function(){const now=monthKey();let [y,m]=now.split('-').map(Number);m++;if(m===13){m=1;y++;}let k=y+'-'+String(m).padStart(2,'0');while(store.months[k]){m++;if(m===13){m=1;y++;}k=y+'-'+String(m).padStart(2,'0');}if(!confirm('Start '+monthName(k)+'? Previous months will remain saved.'))return;const prev=store.months[activeMonth]||{};store.months[k]={};store.customers.forEach(c=>{const p=prev[c.id]||{pkg:8,price:0};store.months[k][c.id]={pkg:Number(p.pkg)||8,price:Number(p.price)||0,paid:0,paymentType:'After wash payment',washes:Array(Number(p.pkg)||8).fill(null)};});activeMonth=k;save();render();alert(monthName(k)+' started. Previous month data is safe.');});
+function dateKeyLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function isScheduledForDate(c,r,d){const map={Sunday:0,Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6};return (r.scheduleDays||[]).some(day=>map[day]===d.getDay());}
+function wasWashedOnDate(r,d){const label=d.toLocaleDateString('en-IN');return (r.washes||[]).some(x=>x===label);}
+function upcomingWashCardsForDate(d,title){
+ const rows=store.customers.filter(c=>{const r=rec(c);return isScheduledForDate(c,r,d);});
+ const label=d.toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+ if(!rows.length)return '<div class="muted" style="padding:8px 0">'+title+' ('+label+'): কোনো scheduled wash নেই।</div>';
+ return '<div style="margin-top:10px"><b>'+title+' • '+label+'</b>'+rows.map(c=>{const r=rec(c),done=wasWashedOnDate(r,d);return '<div class="scheduleCard" style="margin:7px 0"><div class="row"><div><b>'+esc(c.name)+'</b><div class="muted">'+esc(c.car)+' • '+esc(c.apt||'No apartment')+'</div></div><span class="pill '+(done?'paid':'pending')+'">'+(done?'✓ Done':'Pending')+'</span></div>'+(r.scheduleTime?'<div class="muted" style="margin-top:5px">⏰ '+esc(r.scheduleTime)+'</div>':'')+'<div style="margin-top:7px"><button class="waBtn" data-id="'+c.id+'">💬 Wash</button></div></div>';}).join('')+'</div>';
+}
+function renderUpcomingWashList(){const now=new Date();now.setHours(0,0,0,0);const tomorrow=new Date(now);tomorrow.setDate(now.getDate()+1);$('upcomingWashList').innerHTML=upcomingWashCardsForDate(now,'TODAY')+upcomingWashCardsForDate(tomorrow,'TOMORROW');}
+function renderSchedule(){const q=String($('scheduleSearch').value||'').toLowerCase();const rows=store.customers.filter(c=>(c.name+c.car+c.apt).toLowerCase().includes(q));$('scheduleList').innerHTML=rows.map(c=>{const r=rec(c);return '<div class="scheduleCard"><div class="row"><b>'+esc(c.name)+'</b><span>'+esc(c.car)+'</span></div><div class="muted">'+esc(c.apt||'No apartment')+'</div><div style="margin:8px 0">📅 '+esc((r.scheduleDays||[]).join(', ')||'Not scheduled')+(r.scheduleTime?' • ⏰ '+r.scheduleTime:'')+'</div><button class="primary scheduleEditBtn" data-id="'+c.id+'">Edit Schedule</button> <button class="scheduleWaBtn" data-id="'+c.id+'">📅 Send Schedule</button></div>';}).join('')||'<div class="card muted">No customers found.</div>';renderUpcomingWashList();}
+$('scheduleSearch').addEventListener('input',renderSchedule);
+function renderApartmentOptions(){
+ const names=[...new Set(store.customers.map(c=>(c.apt||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ $('apartmentOptions').innerHTML=names.map(a=>'<option value="'+esc(a)+'"></option>').join('');
+}
+function searchWashCard(c){
+ const r=rec(c);
+ const done=(r.washes||[]).filter(Boolean).length;
+ const ws=(r.washes||[]).map((d,i)=>'<span class="wash '+(d?'done':'')+'" style="display:inline-flex;align-items:center;justify-content:center;min-width:48px;margin:3px">W'+(i+1)+(d?'<br><small>'+esc(d)+'</small>':'')+'</span>').join('');
+ return '<div class="customer"><div class="row"><b>🚗 '+esc(c.car)+'</b><span>'+done+'/'+r.pkg+' washes</span></div><div class="muted" style="margin:6px 0">'+esc(c.apt||'No apartment')+'</div><div class="washes">'+ws+'</div></div>';
+}
+function renderApartmentSearch(){
+ const q=String($('aptFind').value||'').trim().toLowerCase();
+ if(!q){$('aptSummary').textContent='';$('aptResult').innerHTML='';return;}
+ const rows=store.customers.filter(c=>String(c.apt||'').toLowerCase().includes(q));
+ const exact=store.customers.filter(c=>String(c.apt||'').trim().toLowerCase()===q);
+ const count=exact.length || rows.length;
+ $('aptSummary').innerHTML='<b>'+count+' car'+(count===1?'':'s')+'</b> found'+(exact.length?'':' (matching apartments)')+'. <button id="downloadAptBtn" class="primary" type="button" style="margin-left:8px">⬇️ Download Car List</button>';
+ $('aptResult').innerHTML=rows.map(searchWashCard).join('')||'<p class="muted">No apartment found.</p>';
+ const btn=$('downloadAptBtn');
+ if(btn) btn.addEventListener('click',function(){downloadApartmentCarList(rows, q);});
+}
+function downloadApartmentCarList(rows, q){
+ const title=(rows[0]&&rows[0].apt?rows[0].apt:$('aptFind').value.trim())||'Apartment';
+ const lines=[['Apartment','Car Number','Wash Completed','Package Washes']];
+ rows.forEach(c=>{const r=rec(c);lines.push([c.apt||title,c.car,(r.washes||[]).filter(Boolean).length,r.pkg]);});
+ const csv=lines.map(row=>row.map(v=>'\"'+String(v).replace(/\"/g,'\"\"')+'\"').join(',')).join('\n');
+ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=title.replace(/[^a-z0-9_-]+/gi,'_')+'_car_list.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+$('carSearchTab').addEventListener('click',function(){
+ $('carSearchBox').style.display='block';$('aptSearchBox').style.display='none';
+ this.className='primary';$('aptSearchTab').className='';
+});
+$('aptSearchTab').addEventListener('click',function(){
+ $('carSearchBox').style.display='none';$('aptSearchBox').style.display='block';
+ this.className='primary';$('carSearchTab').className='';
+ renderApartmentOptions();renderApartmentSearch();
+});
+$('find').addEventListener('input',function(){const q=this.value.trim().toUpperCase(),c=store.customers.find(x=>q&&x.car.includes(q));$('result').innerHTML=c?searchWashCard(c):'<p class="muted">No car found.</p>';});
+$('aptFind').addEventListener('input',renderApartmentSearch);
+$('quickSearch').addEventListener('input',function(){const q=this.value.trim().toUpperCase(),c=store.customers.find(x=>q&&x.car.includes(q));const r=c&&rec(c);$('quickResult').textContent=c?c.name+' • '+c.car+' • '+(r.washes||[]).filter(Boolean).length+'/'+r.pkg+' washes':'';});
+
+function choosePaymentType(){
+ const v=prompt('Payment type লিখুন:\n1 = Advance payment\n2 = After wash payment','2');
+ if(v===null)return null;
+ if(v.trim()==='1')return 'Advance payment';
+ if(v.trim()==='2')return 'After wash payment';
+ alert('Please enter 1 or 2.');
+ return choosePaymentType();
+}
+function paymentDescription(c){
+ return c.paymentType || 'After wash payment';
+}
+
+function scheduleDatesFor(c,r){
+ const days=(r.scheduleDays||[]); const pkg=Math.max(1,Number(r.pkg)||1); if(!days.length) return [];
+ const map={Sunday:0,Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6};
+ const allowed=new Set(days.map(d=>map[d]).filter(x=>x!==undefined));
+ const out=[]; const d=new Date(); d.setHours(0,0,0,0);
+ for(let i=0;i<120 && out.length<pkg;i++){
+   const x=new Date(d); x.setDate(d.getDate()+i);
+   if(allowed.has(x.getDay())) out.push(x);
+ }
+ return out;
+}
+function openScheduleWhatsApp(id){
+ const c=store.customers.find(x=>x.id===Number(id)); const r=c&&rec(c); if(!c||!r)return;
+ const dates=scheduleDatesFor(c,r);
+ if(!dates.length){alert('Please set at least one wash schedule day first.');return;}
+ const lines=dates.map((d,i)=>String(i+1)+'. '+d.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+(r.scheduleTime?' • '+r.scheduleTime:''));
+ const msg='Hi Sir/Ma’am,\n\n🚗 '+companyName()+'\n\nYour wash schedule has been confirmed. 📅\n\nCar Number: '+c.car+'\nPackage: '+r.pkg+' washes\n\nScheduled wash dates:\n'+lines.join('\n')+'\n\nPlease keep the vehicle available on the scheduled dates and time. If the vehicle is not available, kindly inform us in advance.\n\nThank you for choosing '+companyName()+'. 😊';
+ window.open('https://wa.me/'+c.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(msg),'_blank');
+}
+function openWhatsApp(id,type){
+ const c=store.customers.find(x=>x.id===Number(id));
+ if(!c)return;
+ let phone=String(c.phone||'').replace(/\D/g,'');
+ if(phone.length===10)phone='91'+phone;
+ if(!phone){alert('Mobile number নেই। Edit করে customer-এর mobile number দিন.');return;}
+ const r=rec(c);
+ const due=Math.max(0,(Number(r.price)||0)-(Number(r.paid)||0));
+ const done=(r.washes||[]).filter(Boolean).length;
+ let msg='';
+ if(type==='thanks'){msg='Hi Sir/Ma’am,\n\nThank you for your payment. 🙏\n\nCar Number: '+c.car+'\nPayment Received: ₹'+(Number(r.paid)||0)+'\n\nYour payment has been received successfully. We really appreciate your continued support and trust in '+companyName()+'. 🚗✨\n\nThank you! 😊';}else if(type==='payment'){
+   msg='🚗 '+companyName()+'\n\nHi Sir/Ma’am,\n\nYour monthly car wash package ('+done+'/'+r.pkg+' washes) has been completed successfully. ✅\n\nCar Number: '+c.car+'\nAmount Payable: ₹'+due+'\n\n💳 Pay Now: '+upiId()+'\n\nKindly make the payment using the UPI ID above or by scanning our PhonePe QR code.\n\nAfter completing the payment, please share the payment screenshot for confirmation.\n\nA small note regarding our monthly package:\nOur monthly package includes '+r.pkg+' scheduled exterior washes. If the vehicle is not available on any scheduled wash day, that scheduled wash will still be counted as part of the monthly package.\n\nIf you choose not to continue with the monthly package, future washes will be charged on a per-wash basis:\n🚗 Hatchback: ₹200 per exterior wash\n🚙 SUV & other larger cars: ₹300 per exterior wash\n\nThank you. 😊';
+ }else if(type==='reminder'){
+   msg='Hi Sir/Ma’am,\n\nThis is a friendly reminder that the payment for your car wash package is pending.\n\nCar Number: '+c.car+'\nAmount Due: ₹'+due+'\n\nKindly make the payment and share the screenshot once completed.\n\nThank you for your continued support. 🙏';
+ }else{
+   if(done <= 0){ alert('Please mark today’s wash as Done first, then send the Wash message.'); return; }
+   msg='Greetings!\n\nYour car number: '+c.car+'\n\nToday your car has been washed successfully in the morning. 🚗✨\n\nTotal washes completed: '+done+'/'+r.pkg+'.\n\nThank you for choosing '+companyName()+'. 😊';
+ }
+ window.location.href='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);
+}
+
+
+
+function aiRows(){return store.customers.map(c=>({c,r:rec(c)}));}
+function findApartmentInQuestion(low, rows){
+  const apts=[...new Set(rows.map(x=>String(x.c.apt||'').trim()).filter(Boolean))];
+  let best=null;
+  apts.forEach(a=>{const al=a.toLowerCase();if(low.includes(al) && (!best || al.length>best.length))best=al;});
+  return best;
+}
+function filterByApartment(rows, low){
+  const apt=findApartmentInQuestion(low, rows);
+  return {rows:apt?rows.filter(x=>String(x.c.apt||'').trim().toLowerCase()===apt):rows,apt};
+}
+function apartmentRequired(low){
+  return /wash|washed|today|daily|customer|payment|pending|due|received|income|completed|complete|package|schedule|advance|after wash|how many|কত|ধো|পেমেন্ট|বাকি|গ্রাহক|কাস্টমার|টাকা/.test(low);
+}
+function aiAskQuestion(q){
+ q=String(q||'').trim(); const low=q.toLowerCase(); const all=aiRows();
+ const car=all.find(x=>low.includes(String(x.c.car||'').toLowerCase()));
+ if(car){
+   const done=(car.r.washes||[]).filter(Boolean).length, pkg=Number(car.r.pkg||0);
+   const due=Math.max(0,(Number(car.r.price)||0)-(Number(car.r.paid)||0));
+   return '🚗 '+car.c.car+'\nApartment: '+(car.c.apt||'Not set')+'\nCustomer: '+car.c.name+'\nWash: '+done+'/'+pkg+'\nRemaining washes: '+Math.max(0,pkg-done)+'\nPaid: ₹'+(Number(car.r.paid)||0)+'\nPending: ₹'+due+'\nPayment type: '+(car.r.paymentType||'Not recorded');
+ }
+ const f=filterByApartment(all,low), rows=f.rows;
+ if(apartmentRequired(low) && !f.apt){return 'Please mention the apartment name first. I will show data only for that apartment.';}
+ const totalWash=rows.reduce((s,x)=>s+(x.r.washes||[]).filter(Boolean).length,0);
+ const received=rows.reduce((s,x)=>s+(Number(x.r.paid)||0),0);
+ const pending=rows.filter(x=>Math.max(0,(Number(x.r.price)||0)-(Number(x.r.paid)||0))>0);
+ const completed=rows.filter(x=>(x.r.washes||[]).filter(Boolean).length>=Number(x.r.pkg||0));
+ const today=new Date().toLocaleDateString('en-IN');
+ const todayWash=rows.reduce((s,x)=>s+(x.r.washes||[]).filter(d=>d===today).length,0);
+ const scope=f.apt?' for '+rows[0]?.c.apt:'';
+ if(/today|আজ|আজকে|আজকের/.test(low)){
+   if(/wash|washed|ধো|কত/.test(low)) return '🚿 Today\'s completed washes'+scope+': '+todayWash+'\nCustomers: '+new Set(rows.flatMap(x=>(x.r.washes||[]).map((d,i)=>d===today?x.c.id:null).filter(Boolean))).size;
+ }
+ if(/pending|due|বাকি|পেন্ডিং|payment.*not/.test(low)){
+   if(!pending.length)return '✅ No pending payment'+scope+'.';
+   return '🔔 Pending payments ('+pending.length+')'+scope+':\n'+pending.map(x=>{const due=Math.max(0,(Number(x.r.price)||0)-(Number(x.r.paid)||0));return '• '+x.c.name+' — '+x.c.car+' — ₹'+due;}).join('\n')+'\n\nTotal pending: ₹'+pending.reduce((s,x)=>s+Math.max(0,(Number(x.r.price)||0)-(Number(x.r.paid)||0)),0);
+ }
+ if(/received|paid|income|পেয়েছি|পেয়েছি|জমা|মোট.*টাকা/.test(low)) return '💰 '+monthName(activeMonth)+' received'+scope+': ₹'+received;
+ if(/completed|complete|শেষ|package.*complete|8\/8|৮\/৮/.test(low)){
+   if(!completed.length)return 'No package has been completed'+scope+'.';
+   return '✅ Completed packages ('+completed.length+')'+scope+':\n'+completed.map(x=>'• '+x.c.name+' — '+x.c.car+' — '+x.r.pkg+'/'+x.r.pkg).join('\n');
+ }
+ if(/wash|washed|ধোয়া|ধোয়া|কত.*wash|কতগুলো/.test(low)) return '🚿 '+monthName(activeMonth)+' completed wash'+scope+': '+totalWash+'\nCustomers: '+rows.length;
+ if(/customer|গ্রাহক|কাস্টমার/.test(low)) return '👥 Customers'+scope+': '+rows.length;
+ if(/advance|অ্যাডভান্স|আগে টাকা/.test(low)){
+   const list=rows.filter(x=>String(x.r.paymentType||'').toLowerCase().includes('advance'));
+   return list.length?'💳 Advance payment customers'+scope+':\n'+list.map(x=>'• '+x.c.name+' — '+x.c.car+' — ₹'+(Number(x.r.paid)||0)).join('\n'):'No advance payment record'+scope+'.';
+ }
+ if(/after wash|after.*payment|wash.*payment|পরে টাকা/.test(low)){
+   const list=rows.filter(x=>String(x.r.paymentType||'').toLowerCase().includes('after wash'));
+   return list.length?'💳 After-wash payment customers'+scope+':\n'+list.map(x=>'• '+x.c.name+' — '+x.c.car+' — ₹'+(Number(x.r.paid)||0)).join('\n'):'No after-wash payment record'+scope+'.';
+ }
+ return 'Please mention an apartment name and ask about its customers, washes, payments, or schedule.';
+}
+function applyAIInstructions(answer){const ins=String(store.aiInstructions||'').toLowerCase();if(/english|reply in english|answer in english/.test(ins)){answer=answer.replaceAll('এই মাসে কোনো pending payment নেই।','There is no pending payment this month.').replaceAll('এই মাসে কোনো package এখনও সম্পূর্ণ হয়নি।','No package has been completed this month.').replaceAll('এই মাসে কোনো Advance payment record নেই।','There is no advance payment record this month.').replaceAll('এই মাসে কোনো After-wash payment record নেই।','There is no after-wash payment record this month.');}if(/short|brief|সংক্ষিপ্ত/.test(ins))answer=answer.split('\n').slice(0,7).join('\n');return answer;}function runAI(q){
+ $('aiAnswer').textContent='AI ভাবছে...';
+ setTimeout(()=>{$('aiAnswer').textContent=applyAIInstructions(aiAskQuestion(q));},180);
+}
+
+document.addEventListener('click',function(e){if(e.target.classList.contains('wash')){const c=store.customers.find(x=>x.id===Number(e.target.dataset.id)),i=Number(e.target.dataset.i),r=c&&rec(c);if(r){r.washes[i]=r.washes[i]?null:new Date().toLocaleDateString('en-IN');save();render();renderUpcomingWashList();}}if(e.target.classList.contains('paymentBtn')){ const c=store.customers.find(x=>x.id===Number(e.target.dataset.id)); const r=c&&rec(c); if(c&&r){ const pt=choosePaymentType(); if(!pt)return; r.paymentType=pt; const a=prompt('Total amount paid for '+monthName(activeMonth),r.paid||0); if(a===null)return; const oldPaid=Number(r.paid)||0; const newPaid=Math.max(0,Number(a)||0); r.paid=newPaid; const delta=newPaid-oldPaid; if(delta>0) store.paymentHistory.push({id:Date.now(),customerId:c.id,month:activeMonth,date:dateKeyLocal(new Date()),amount:delta}); save(); render(); renderDashboard(); }}if(e.target.classList.contains('editBtn'))editCustomer(e.target.dataset.id);if(e.target.classList.contains('waBtn'))openWhatsApp(e.target.dataset.id,'wash');
+if(e.target.classList.contains('reminderWaBtn'))openWhatsApp(e.target.dataset.id,'reminder');
+if(e.target.classList.contains('paymentWaBtn'))openWhatsApp(e.target.dataset.id,'payment');if(e.target.classList.contains('scheduleWaBtn'))openScheduleWhatsApp(e.target.dataset.id);if(e.target.classList.contains('thanksWaBtn'))openWhatsApp(e.target.dataset.id,'thanks');if(e.target.classList.contains('scheduleEditBtn'))editCustomer(e.target.dataset.id);if(e.target.classList.contains('deleteBtn')){if(confirm('Delete customer from all months? This cannot be undone.')){const id=Number(e.target.dataset.id);store.customers=store.customers.filter(x=>x.id!==id);Object.keys(store.months).forEach(k=>delete store.months[k][id]);save();render();renderUpcomingWashList();}}});
+$('expenseDate').value=dateKeyLocal(new Date());
+$('addExpenseBtn').addEventListener('click',function(){
+ const type=$('expenseType').value, amount=Number($('expenseAmount').value)||0, date=$('expenseDate').value||dateKeyLocal(new Date()), note=$('expenseNote').value.trim();
+ if(amount<=0){alert('Please enter a valid expense amount.');return;}
+ store.expenses.push({id:Date.now(),type,amount,date,note});save();$('expenseAmount').value='';$('expenseNote').value='';$('expenseSaved').textContent='Saved ✓';setTimeout(()=>$('expenseSaved').textContent='',1500);renderDashboard();
+});
+
+$('backupBtn').addEventListener('click',function(){const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='smart-city-car-wash-full-backup.json';a.click();});
+$('importBtn').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x||!Array.isArray(x.customers)||!x.months)throw 0;store=x;if(!Array.isArray(store.expenses))store.expenses=[];if(!Array.isArray(store.paymentHistory))store.paymentHistory=[];ensureMonth(activeMonth);save();render();renderDashboard();alert('Full backup restored successfully')}catch(err){alert('Invalid backup file')}};r.readAsText(f);});
+
+document.querySelectorAll('.aiQ').forEach(b=>b.addEventListener('click',()=>{ $('aiInput').value=b.dataset.q; runAI(b.dataset.q); }));
+$('aiAsk').addEventListener('click',()=>runAI($('aiInput').value));
+$('aiInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runAI($('aiInput').value);}});
+
+$('aiInstructions').value=store.aiInstructions||'';$('saveAIInstructions').addEventListener('click',function(){store.aiInstructions=$('aiInstructions').value.trim();save();$('aiInstructionSaved').textContent='Saved ✓';setTimeout(()=>{$('aiInstructionSaved').textContent='';},1800);});renderSchedule();stats();render();
+})();
+</script>
+</body></html>
