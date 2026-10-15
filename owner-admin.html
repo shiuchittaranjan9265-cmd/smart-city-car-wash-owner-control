@@ -4,7 +4,16 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-const firebaseConfig={apiKey:'PASTE_API_KEY',authDomain:'PASTE_AUTH_DOMAIN',projectId:'PASTE_PROJECT_ID',storageBucket:'PASTE_STORAGE_BUCKET',messagingSenderId:'PASTE_MESSAGING_SENDER_ID',appId:'PASTE_APP_ID'};
+const firebaseConfig={// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCtPymcfyDc5hFG_x0yizl3NTUDn_E-Jis",
+  authDomain: "smartcitycarwash-8fe2b.firebaseapp.com",
+  projectId: "smartcitycarwash-8fe2b",
+  storageBucket: "smartcitycarwash-8fe2b.firebasestorage.app",
+  messagingSenderId: "414891237098",
+  appId: "1:414891237098:web:de8c740c2ea6cbb2288193",
+  measurementId: "G-9TZ0G926YT"
+};
 const $=id=>document.getElementById(id); let auth,db,configReady=false;
 try{configReady=Object.values(firebaseConfig).every(v=>v&&!String(v).startsWith('PASTE_'));if(configReady){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}else $('loginMsg').textContent='Setup needed: add your Firebase Web App config in owner-admin.html first.';}catch(e){$('loginMsg').textContent='Firebase setup error: '+e.message}
 function msg(id,s){$(id).textContent=s}
