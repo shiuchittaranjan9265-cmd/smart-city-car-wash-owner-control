@@ -468,10 +468,10 @@ function openScheduleWhatsApp(id){
 function openCarNotAvailableWhatsApp(id){
  const c=store.customers.find(x=>x.id===Number(id));
  if(!c)return;
- let phone=String(c.phone||'').replace(/\\D/g,'');
+ let phone=String(c.phone||'').replace(/\D/g,'');
  if(phone.length===10)phone='91'+phone;
  if(!phone){alert('Mobile number missing. Please edit customer details first.');return;}
- const msg='Hi '+(c.name||'there')+', 😊\\n\\nWe came for your scheduled car wash today, but unfortunately your car was not available.\\n\\nIf your car will not be available on a scheduled wash day, please let us know in advance. This will help us plan our schedule and see whether an alternative wash day can be arranged.\\n\\nPlease note that if we are not informed in advance, the scheduled wash will still be counted as part of your monthly package.\\n\\nIf you inform us in advance, we will do our best to reschedule the wash. However, rescheduling cannot be guaranteed, as it will depend on our availability and work schedule.\\n\\nThank you for your understanding and cooperation. We truly appreciate your continued support! 🚗❤️\\n\\n'+companyName();
+ const msg='Hello! 😊\n\nWe came for your scheduled car wash today, but unfortunately your car ('+c.car+') was not available.\n\nIf your car will not be available on a scheduled wash day, please let us know in advance. This will help us plan our schedule and see whether an alternative wash day can be arranged.\n\nPlease note that if we are not informed in advance, the scheduled wash will still be counted as part of your monthly package.\n\nIf you inform us in advance, we will do our best to reschedule the wash. However, rescheduling cannot be guaranteed, as it will depend on our availability and work schedule.\n\nThank you for your understanding and cooperation. We truly appreciate your continued support! 🚗❤️\n\n'+companyName();
  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
 }
 function openWhatsApp(id,type){
